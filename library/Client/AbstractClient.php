@@ -12,40 +12,49 @@ use Coinsnap\Http\WPRemoteClient;
 use Coinsnap\Http\Response;
 
 class AbstractClient{
-    
-    private $apiKey;    // @var string    
-    private $baseUrl;   // @var string
-    private $httpClient;    // @var ClientInterface
+    /** @var string */
+    private $apiKey;
+    /** @var string */
+    private $baseUrl;
+    /** @var string */
+    private $apiPath = '/api/v1/';
+    /** @var ClientInterface */
+    private $httpClient;
 
     public function __construct(string $baseUrl, string $apiKey, ClientInterface $client = null)
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey;
 
-        // Use the $client parameter to use a custom wpRemote client, for example if you need to disable CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
+        // Use the $client parameter to use a custom WPRemote client
         if ($client === null) {
-            $client = new wpRemoteClient();
+            $client = new WPRemoteClient();
         }
         $this->httpClient = $client;
     }
 
-    protected function getBaseUrl(): string {
+    protected function getBaseUrl(): string
+    {
         return $this->baseUrl;
     }
 
-    protected function getApiUrl(): string {
-        return $this->baseUrl . COINSNAP_API_PATH;
+    protected function getApiUrl(): string
+    {
+        return $this->baseUrl . $this->apiPath;
     }
 
-    protected function getApiKey(): string {
+    protected function getApiKey(): string
+    {
         return $this->apiKey;
     }
 
-    protected function getHttpClient(): ClientInterface {
+    protected function getHttpClient(): ClientInterface
+    {
         return $this->httpClient;
     }
 
-    protected function getRequestHeaders(): array {
+    protected function getRequestHeaders(): array
+    {
         return [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
@@ -55,13 +64,17 @@ class AbstractClient{
 
     protected function getExceptionByStatusCode(string $method, string $url, Response $response): RequestException {
         
+        $method = esc_html($method);
+        $url = esc_url($url);
+        //$response = esc_html($response);
+        
         $exceptions = [
             ForbiddenException::STATUS => ForbiddenException::class,
             BadRequestException::STATUS => BadRequestException::class,
         ];
 
         $class = $exceptions[$response->getStatus()] ?? RequestException::class;
-        $e = new $class(esc_html($method), esc_url($url), $response);
+        $e = new $class($method, $url, $response);
         return $e;
     }
 }
