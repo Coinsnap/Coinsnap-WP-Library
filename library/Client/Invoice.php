@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
-
 namespace Coinsnap\Client;
+
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 use Coinsnap\Result\InvoicePaymentMethod;
 use Coinsnap\Util\PreciseNumber;
@@ -48,7 +51,7 @@ class Invoice extends AbstractClient{
                 json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR)
             );
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), $response);
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -62,7 +65,7 @@ class Invoice extends AbstractClient{
         if ($response->getStatus() === 200) {
             return new \Coinsnap\Result\Invoice(json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR));
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), $response);
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
