@@ -1,15 +1,31 @@
+# Coinsnap Wordpress Library #
+![Coinsnap Wordpress Library](https://resources.coinsnap.org/products/wp-library/images/1.png)
+
+## Bitcoin and Lightning payments in WordPress ##
+
+# Coinsnap Wordpress Library 1.1.4 #
+
+* Contributors: coinsnap
+* Tags: Lightning, Lightning Payment, SATS, Satoshi sats, bitcoin, Wordpress, accept bitcoin, bitcoin plugin, bitcoin payment processor, bitcoin e-commerce, Lightning Network, cryptocurrency, lightning payment processor
+* Requires at least: 5.2
+* Tested up to: 6.7.1
+* Requires PHP: 7.4
+* Stable tag: 1.1.4
+* License: GPL2
+* License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
 Coinsnap is a Lightning payment provider and offers a payment gateway for processing Bitcoin and Lightning payments in Wordpress. A merchant only needs a Lightning wallet with a lightning address to accept Bitcoin and Lightning payments on their website.
 
-Coinsnap Wordpress library for PHP 7.4+
+## Coinsnap Wordpress library for PHP 7.4+ ## 
 
 This API library is created for PHP developers to connect online store to Coinsnap payment gateway fast and easy. You can include this library inside your plug-in or use it as plugin inside your system.
 5 steps to receive payments in via Bitcoin/Lightning payment gateway
 
-    Registration in Coinsnap App
-    Settings saving and payment statuses matching
-    Connecting to Coinsnap App and Webhook saving
-    Invoice and payment link receiving
-    Payment status update
+* Registration in Coinsnap App
+* Settings saving and payment statuses matching
+* Connecting to Coinsnap App and Webhook saving
+* Invoice and payment link receiving
+* Payment status update
 
 1. Registration in Coinsnap App
 
@@ -18,10 +34,10 @@ Register you account on Coinsnap App, fill all the necessary fields and receive 
 
 You need to save Store Id and API Key in your database as Coinsnap connection configuration. Later you'll add there webhook data. If your store has reserved payment statuses, you can match your payment statuses to Coinsnap's:
 
-    New - for new invoice
-    Processing - for invoice in processing
-    Settled - for paid invoice
-    Expired - for expired invoice
+* New - for new invoice
+* Processing - for invoice in processing
+* Settled - for paid invoice
+* Expired - for expired invoice
 
 If you can add Coinsnap payment statuses to existing, you can do it too. It depends of your system.
 3. Connecting to Coinsnap App and Webhook saving
