@@ -23,7 +23,7 @@ class Webhook extends AbstractClient {
                 json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR)
             );
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -39,7 +39,7 @@ class Webhook extends AbstractClient {
             return new \Coinsnap\Result\Webhook($data);
         }
         else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -65,7 +65,9 @@ class Webhook extends AbstractClient {
         if ($secret === '') {
             throw new \InvalidArgumentException('Argument $secret should be NULL (let Server auto-generate a secret) or you should provide a long and safe secret string.');
         } 
-        elseif ($secret !== null) $data['secret'] = $secret;
+        elseif ($secret !== null){
+            $data['secret'] = $secret;
+        }
 
         $url = $this->getApiUrl() . ''.COINSNAP_SERVER_PATH.'/' . urlencode($storeId) . '/webhooks';
         $headers = $this->getRequestHeaders();
@@ -76,7 +78,7 @@ class Webhook extends AbstractClient {
             $data = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             return new \Coinsnap\Result\WebhookCreated($data);
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -125,7 +127,7 @@ class Webhook extends AbstractClient {
             $data = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             return new \Coinsnap\Result\Webhook($data);
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -140,15 +142,14 @@ class Webhook extends AbstractClient {
         return false;
     }
 
-    public function deleteWebhook(string $storeId, string $webhookId): void
-    {
+    public function deleteWebhook(string $storeId, string $webhookId): void {
         $url = $this->getApiUrl() . ''.COINSNAP_SERVER_PATH.'/' . urlencode($storeId) . '/webhooks/' . urlencode($webhookId);
         $headers = $this->getRequestHeaders();
         $method = 'DELETE';
         $response = $this->getHttpClient()->request($method, $url, $headers);
 
-        if ($response->getStatus() !== 200) {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+        if ($response->getStatus() !== 204 && $response->getStatus() !== 200) {
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 
@@ -173,7 +174,7 @@ class Webhook extends AbstractClient {
             }
             return $r;
         } else {
-            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), esc_html($response->getStatus()), esc_html($response->getBody()));
+            throw $this->getExceptionByStatusCode(esc_html($method), esc_url($url), (int)esc_html($response->getStatus()), esc_html($response->getBody()));
         }
     }
 }
