@@ -75,8 +75,6 @@ class Store extends AbstractClient{
                     $result['usdt'] = false;
                     foreach($json_decode as $storePaymentMethod){
                         
-                        //Logger::debug('Payment Method: '.$storePaymentMethod['paymentMethodId']);
-                        
                         if($storePaymentMethod['enabled'] > 0 && stripos($storePaymentMethod['paymentMethodId'],'BTC') !== false){
                             $result['onchain'] = true;
                         }

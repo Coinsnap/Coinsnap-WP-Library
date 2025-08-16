@@ -49,7 +49,7 @@ class Invoice extends AbstractClient{
     
     public function checkPaymentData($amount,$currency,$provider = 'coinsnap',$mode = 'invoice'): array {
         
-        if($provider === 'bitcoin'){
+        if($provider === 'bitcoin' || $provider === 'lightning'){
             $btcPayCurrencies = $this->loadExchangeRates();
             
             if(!$btcPayCurrencies['result']){
