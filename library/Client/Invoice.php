@@ -5,11 +5,10 @@ namespace Coinsnap\Client;
 if (!defined('ABSPATH')) {
     exit;
 }
-header('Access-Control-Allow-Origin: *');
-
 use Coinsnap\Result\InvoicePaymentMethod;
 use Coinsnap\Util\PreciseNumber;
 use Coinsnap\Http\WPRemoteClient;
+use Coinsnap\Exception\RequestException;
 
 class Invoice extends AbstractClient{
     
@@ -164,6 +163,41 @@ class Invoice extends AbstractClient{
         }
     }
 
+    /**
+     * Fetch an invoice for a webhook handler or return page, keeping the three outcomes apart:
+     *
+     *  - returns the invoice when the API has it (HTTP 200);
+     *  - returns null when the API says it doesn't exist (Coinsnap 400, BTCPay 404), e.g. a dashboard
+     *    "Send test webhook" with a made-up invoice ID: reply 200 and stop;
+     *  - throws when the API can't answer (network error, 5xx, 401/403 bad key, 429 ...): reply 503
+     *    so the provider retries. An API error is never "not found".
+     *
+     * @throws \Coinsnap\Exception\ConnectException network error
+     * @throws RequestException any other non-200, non-400/404 status
+     */
+    public function fetchInvoice(string $storeId, string $invoiceId): ?\Coinsnap\Result\Invoice {
+        if ($storeId === '' || $invoiceId === '') {
+            return null;
+        }
+        $url = $this->getApiUrl().''.COINSNAP_SERVER_PATH.'/'.rawurlencode($storeId).'/invoices/'.rawurlencode($invoiceId);
+        $method = 'GET';
+        $response = $this->getHttpClient()->request($method, $url, $this->getRequestHeaders());
+        $status = $response->getStatus();
+
+        if ($status === 200) {
+            $data = json_decode($response->getBody(), true);
+            return (is_array($data) && isset($data['id'])) ? new \Coinsnap\Result\Invoice($data) : null;
+        }
+        if ($status === 400 || $status === 404) {
+            return null;
+        }
+        throw $this->getExceptionByStatusCode($method, $url, $status, $response->getBody());
+    }
+
+    /**
+     * @deprecated Since 1.2.1 for webhook handlers: it throws for "not found" as well as for API errors,
+     *             so a caller can't tell a test webhook from an outage. Use fetchInvoice().
+     */
     public function getInvoice(string $storeId,string $invoiceId): \Coinsnap\Result\Invoice {
 
         $url = $this->getApiUrl().''.COINSNAP_SERVER_PATH.'/'.urlencode($storeId).'/invoices/'.urlencode($invoiceId);

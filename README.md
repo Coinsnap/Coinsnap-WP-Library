@@ -63,4 +63,13 @@ You don't need to change your catalog, basket and order mechanism, but there wil
 
 After sending invoice request you will receive payment link and QR-codes for payment in Lightning or Bitcoin. You need to store in order or transaction data received Invoice ID to check payment statuses on fifth step.
 5. Payment status update
-After invoice creation and payment receiving Coinsnap App will connect to callback URL that you have sent to Coinsnap earlier. The body of the request is JSON-object {"type":«Payment status»,"invoiceId":«Invoice ID»}. You can check signature, sent in header «x-coinsnap-sig» to ensure that request is sent by Coinsnap and update paynebt status inside your webshop.
+After invoice creation and payment receiving Coinsnap App will connect to callback URL that you have sent to Coinsnap earlier. The body of the request is JSON-object {"type":«Payment status»,"invoiceId":«Invoice ID»}. Never trust the body: it only tells you which invoice to look at.
+
+5.1. Check the signature over the raw request body before anything else. Coinsnap sends «X-Coinsnap-Signature: t=«unix time»,v1=«hex»»; use Coinsnap\Client\Webhook::isValidCoinsnapSignature(«Raw body», «Header», «Webhook secret») (or coinsnapSignatureError() to log the reason). It rejects an empty secret and a timestamp older than 5 minutes. For BTCPay use Webhook::isValidBTCPaySignature() with the «BTCPay-Sig» header. Reply 401 if the check fails. The old «X-Coinsnap-Sig» header and Webhook::isIncomingWebhookRequestValid() are deprecated.
+
+5.2. Take only the invoice ID (Webhook::getInvoiceIdFromBody()) and fetch the invoice with Coinsnap\Client\Invoice::fetchInvoice(«Store ID», «Invoice ID»). It returns the invoice, null if the invoice doesn't exist (e.g. the dashboard's "Send test webhook": reply 200), or throws when the API can't answer (reply 503 so the webhook is retried).
+
+5.3. Mark your order paid only if the invoice is the one you saved for that order and $invoice->paysAmount(«Price», «Currency», «Is BTCPay») is true (Settled, same currency and amount). Do it once per invoice ID.
+
+6. BTCPay connect callback
+Never read the key's permissions or store ID from the POST. Create a one-time state with Coinsnap\Client\BTCPayApiAuthorization::startState() when the admin clicks "Connect", check it in the callback with consumeState(), then ask BTCPay with BTCPayApiAuthorization::fromApiKey(«Saved BTCPay URL», «API key») and accept the key only if isAcceptable() is true (every permission limited to one store, with the permissions the plugin needs).
