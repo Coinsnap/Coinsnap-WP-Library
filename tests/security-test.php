@@ -223,6 +223,10 @@ $_COOKIE['coinsnap_notices'] = ['x' => addslashes(json_encode(['type' => 'x" onm
 ob_start(); (new \Coinsnap\Util\Notice())->showNotices(); $html = ob_get_clean();
 ok(strpos($html, 'onmouseover') === false && strpos($html, 'notice-info') !== false, 'Notice: unknown type falls back to info');
 
+// ---------------------------------------------------------------- result array access (PHP 7.4 too)
+$res = new \Coinsnap\Result\Invoice(['id' => 'inv1', 'status' => 'Settled']);
+ok((function () use ($res) { try { return $res['status'] === 'Settled' && $res['missing'] === null; } catch (\Throwable $e) { return false; } })(), 'Result array access returns value');
+
 // ---------------------------------------------------------------- static checks
 $all = '';
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../library')) as $f) {
