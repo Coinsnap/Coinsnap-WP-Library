@@ -227,6 +227,30 @@ ok(strpos($html, 'onmouseover') === false && strpos($html, 'notice-info') !== fa
 $res = new \Coinsnap\Result\Invoice(['id' => 'inv1', 'status' => 'Settled']);
 ok((function () use ($res) { try { return $res['status'] === 'Settled' && $res['missing'] === null; } catch (\Throwable $e) { return false; } })(), 'Result array access returns value');
 
+// ---------------------------------------------------------------- createInvoice: orderId, buyer and metadata reach both providers
+$created = json_encode(['id' => 'inv_new', 'status' => 'New']);
+foreach (['Coinsnap' => 'https://app.coinsnap.io', 'BTCPay' => 'https://btcpay.example'] as $p => $base) {
+    $c = new FakeClient([[200, $created]]);
+    (new Invoice($base, 'k', $c))->createInvoice('store_1', 'EUR', \Coinsnap\Util\PreciseNumber::parseString('12.50'), 'ORD-42', 'buyer@example.com', 'Jane Doe', 'https://shop/return', null,
+        ['orderNumber' => '42', 'itemDesc' => 'Order 42', 'lineItems' => [['name' => 'Tee', 'quantity' => 2, 'price' => '6.25']]]);
+    $sent = json_decode($c->calls[0]['body'], true);
+    $m = $sent['metadata'] ?? [];
+    ok(($sent['orderId'] ?? null) === 'ORD-42', "createInvoice $p: top-level orderId");
+    ok(($sent['buyerEmail'] ?? null) === 'buyer@example.com', "createInvoice $p: top-level buyerEmail");
+    ok(($m['orderId'] ?? null) === 'ORD-42', "createInvoice $p: metadata.orderId (BTCPay reads it only from metadata)");
+    ok(($m['buyerEmail'] ?? null) === 'buyer@example.com', "createInvoice $p: metadata.buyerEmail (BTCPay reads it only from metadata)");
+    ok(($m['customerName'] ?? null) === 'Jane Doe', "createInvoice $p: metadata.customerName");
+    ok(($m['orderNumber'] ?? null) === '42', "createInvoice $p: caller's orderNumber not overwritten");
+    ok(($m['itemDesc'] ?? null) === 'Order 42' && ($m['lineItems'][0]['quantity'] ?? null) === 2, "createInvoice $p: arbitrary metadata passed through");
+    ok(($sent['checkout']['redirectUrl'] ?? null) === 'https://shop/return', "createInvoice $p: checkout.redirectUrl");
+}
+$c = new FakeClient([[200, $created]]);
+(new Invoice('https://x', 'k', $c))->createInvoice('s', 'EUR', \Coinsnap\Util\PreciseNumber::parseString('1'), 'ORD-1', null, null, null, null, ['orderId' => 'keep-me']);
+ok((json_decode($c->calls[0]['body'], true)['metadata']['orderId'] ?? null) === 'keep-me', "createInvoice: caller's metadata.orderId not overwritten");
+$c = new FakeClient([[200, $created]]);
+ok(!throws(function () use ($c) { (new Invoice('https://x', 'k', $c))->createInvoice('s', 'EUR', \Coinsnap\Util\PreciseNumber::parseString('1')); }, Throwable::class), 'createInvoice: no orderId and no metadata does not error');
+ok(isset($c->calls[0]) && json_decode($c->calls[0]['body'], true)['metadata'] === null, 'createInvoice: no orderId and no metadata sends metadata null');
+
 // ---------------------------------------------------------------- static checks
 $all = '';
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../library')) as $f) {

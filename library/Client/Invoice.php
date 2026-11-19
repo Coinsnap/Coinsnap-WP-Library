@@ -130,7 +130,14 @@ class Invoice extends AbstractClient{
         $method = 'POST';
 
         // Prepare metadata.
+        // BTCPay Server ignores the top-level orderId and buyerEmail fields and only reads them
+        // from metadata, so copy them there too. Coinsnap reads the top-level fields (and copies
+        // orderId into metadata.orderId itself), so the values stay the same on both providers.
+        // Keys the caller already set in $metaData are never overwritten.
+        if(!is_array($metaData)){ $metaData = array();}
+        if(!isset($metaData['orderId']) && !empty($orderId)){ $metaData['orderId'] = $orderId;}
         if(!isset($metaData['orderNumber']) && !empty($orderId)){ $metaData['orderNumber'] = $orderId;}
+        if(!isset($metaData['buyerEmail']) && !empty($buyerEmail)){ $metaData['buyerEmail'] = $buyerEmail;}
         if(!isset($metaData['customerName']) && !empty($customerName)){ $metaData['customerName'] = $customerName;}
         
         $body_array = array(
